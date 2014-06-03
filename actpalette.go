@@ -8,15 +8,19 @@ import (
   "io/ioutil"
   "bytes"
   "fmt"
+  "path/filepath"
 )
 
 func main() {
-  s, err := ioutil.ReadFile(os.Args[1])
+  input_file := os.Args[1]
+  s, err := ioutil.ReadFile(input_file)
   if err != nil {
     fmt.Println(err)
   }
   p := NewPalette(s)
-  ioutil.WriteFile("foo.act",p.Bytes(),0777)
+  var extension = filepath.Ext(input_file)
+  var name = input_file[0:len(input_file)-len(extension)]
+  ioutil.WriteFile(name + ".act",p.Bytes(),0777)
 }
 
 type Palette struct {
