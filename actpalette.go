@@ -4,10 +4,19 @@ import (
   "encoding/json"
   "encoding/hex"
   "encoding/binary"
+  "os"
+  "io/ioutil"
+  "bytes"
+  "fmt"
 )
 
 func main() {
-
+  s, err := ioutil.ReadFile(os.Args[1])
+  if err != nil {
+    fmt.Println(err)
+  }
+  p := NewPalette(s)
+  ioutil.WriteFile("foo.act",p.Bytes(),0777)
 }
 
 type Palette struct {
@@ -43,20 +52,28 @@ func (p Palette) Bytes() []byte {
     retval[3*i+2] = s[2]
   }
 
-  bytes := make([]byte,2)
-  binary.PutUvarint(bytes, uint64(len(p.Colors)))
+  cbytes := new(bytes.Buffer)
+  binary.Write(cbytes, binary.BigEndian, uint64(len(p.Colors)))
 
   // length 
-  retval[768] = bytes[0]
-  retval[769] = bytes[1]
+  cbytes.Next(6)
+  b1, _ := cbytes.ReadByte()
+  retval[768] = b1
+  b2, _ := cbytes.ReadByte()
+  retval[769] = b2
 
   if p.TransparentColor != "" {
-    tbytes := make([]byte,2)
-    binary.PutUvarint(tbytes, uint64(p.IndexOfTColor()))
-
+    tbytes := new(bytes.Buffer)
+    err := binary.Write(tbytes, binary.BigEndian, uint64(p.IndexOfTColor()))
+    if (err != nil) {
+      fmt.Println(err)
+    }
     // length 
-    retval[770] = tbytes[0]
-    retval[771] = tbytes[1]
+    tbytes.Next(6)
+    b3, _ := tbytes.ReadByte()
+    retval[770] = b3
+    b4, _ := tbytes.ReadByte()
+    retval[771] = b4
   } else {
     // transparency
     retval[770] = 0xFF

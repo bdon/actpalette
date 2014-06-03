@@ -70,14 +70,18 @@ func TestSetTransparent(t *testing.T) {
 	a := NewPalette(str)
   r := bytes.NewReader(a.Bytes())
   r.Seek(770,0)
-  bnum := make([]byte,2)
+  bnum := make([]byte,8)
   b1, _ := r.ReadByte()
-  bnum[0] = b1
+  bnum[6] = b1
   b2, _ := r.ReadByte()
-  bnum[1] = b2
+  bnum[7] = b2
 
   buf := bytes.NewReader(bnum)
-  num, _ := binary.ReadUvarint(buf)
+  var num uint64
+  err := binary.Read(buf, binary.BigEndian, &num)
+  if err != nil {
+    t.Errorf("Error: %s", err)
+  }
   if num != 1 {
     t.Errorf("transparent index should be 1, got %d", num);
   }
@@ -91,16 +95,20 @@ func TestSetPaletteLength(t *testing.T) {
 	a := NewPalette(str)
   r := bytes.NewReader(a.Bytes())
   r.Seek(768,0)
-  bnum := make([]byte,2)
+  bnum := make([]byte,8)
   b1, _ := r.ReadByte()
-  bnum[0] = b1
+  bnum[6] = b1
   b2, _ := r.ReadByte()
-  bnum[1] = b2
+  bnum[7] = b2
 
   buf := bytes.NewReader(bnum)
-  num, _ := binary.ReadUvarint(buf)
-  if num != 3 {
-    t.Errorf("palette length should be 3, got %d", num);
+  var num1 uint64
+  err := binary.Read(buf, binary.BigEndian, &num1)
+  if err != nil {
+    t.Errorf("Error: %s", err)
+  }
+  if num1 != 3 {
+    t.Errorf("palette length should be 3, got %d", num1);
   }
 
   // test max number of colors (255)
@@ -111,15 +119,19 @@ func TestSetPaletteLength(t *testing.T) {
   a.Colors = bigarr
   r = bytes.NewReader(a.Bytes())
   r.Seek(768,0)
-  bnum = make([]byte,2)
+  bnum = make([]byte,8)
   b1, _ = r.ReadByte()
-  bnum[0] = b1
+  bnum[6] = b1
   b2, _ = r.ReadByte()
-  bnum[1] = b2
+  bnum[7] = b2
 
   buf = bytes.NewReader(bnum)
-  num, _ = binary.ReadUvarint(buf)
-  if num != 255 {
-    t.Errorf("palette length should be 255, got %d", num);
+  var num2 uint64
+  err = binary.Read(buf, binary.BigEndian, &num2)
+  if err != nil {
+    t.Errorf("Error: %s", err)
+  }
+  if num2 != 255 {
+    t.Errorf("palette length should be 255, got %d", num2);
   }
 }
